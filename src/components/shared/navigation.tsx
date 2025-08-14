@@ -13,7 +13,9 @@ import {
   BarChart3, 
   Settings, 
   LogOut,
-  User
+  User,
+  History,
+  Target
 } from 'lucide-react'
 
 const navigationItems = [
@@ -33,9 +35,19 @@ const navigationItems = [
     icon: BookOpen
   },
   {
+    name: 'Spaced Repetition',
+    href: '/dashboard/spaced-repetition',
+    icon: Target
+  },
+  {
     name: 'Analytics',
     href: '/dashboard/analytics',
     icon: BarChart3
+  },
+  {
+    name: 'History',
+    href: '/dashboard/history',
+    icon: History
   },
   {
     name: 'Settings',

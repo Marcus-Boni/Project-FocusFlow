@@ -12,6 +12,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "FocusFlow - Smart Study Tracker",
   description: "A modern study tracker designed for software engineers and tech students to maximize learning through neuroscience-based techniques.",
+  icons: {
+    icon: "/brain.svg",
+    shortcut: "/brain.svg",
+    apple: "/brain.svg",
+  }
 };
 
 export default function RootLayout({

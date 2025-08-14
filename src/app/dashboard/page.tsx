@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useUserStore } from '@/stores/useUserStore'
 import { supabase } from '@/lib/supabase'
 import { MotivationWidget } from '@/components/shared/motivation-widget'
+import { RSSFeedWidget } from '@/components/shared/rss-feed-widget'
 import { Timer, BookOpen, BarChart3, Trophy, Clock, Target } from 'lucide-react'
 
 interface DashboardStats {
@@ -140,37 +142,37 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 bg-card rounded-lg border p-6">
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent transition-colors">
+            <Link href="/dashboard/timer" className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent transition-colors">
               <Timer className="w-8 h-8 text-primary" />
               <div className="text-left">
                 <p className="font-medium">Start Study Session</p>
                 <p className="text-sm text-muted-foreground">Begin a focused study session</p>
               </div>
-            </button>
+            </Link>
 
-            <button className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent transition-colors">
+            <Link href="/dashboard/study-areas" className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent transition-colors">
               <BookOpen className="w-8 h-8 text-primary" />
               <div className="text-left">
                 <p className="font-medium">Manage Study Areas</p>
                 <p className="text-sm text-muted-foreground">Add or edit your subjects</p>
               </div>
-            </button>
+            </Link>
 
-            <button className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent transition-colors">
+            <Link href="/dashboard/analytics" className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent transition-colors">
               <BarChart3 className="w-8 h-8 text-primary" />
               <div className="text-left">
                 <p className="font-medium">View Analytics</p>
                 <p className="text-sm text-muted-foreground">Check your progress</p>
               </div>
-            </button>
+            </Link>
 
-            <button className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent transition-colors">
+            <Link href="/dashboard/spaced-repetition" className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent transition-colors">
               <Target className="w-8 h-8 text-primary" />
               <div className="text-left">
-                <p className="font-medium">Set Goals</p>
-                <p className="text-sm text-muted-foreground">Define study objectives</p>
+                <p className="font-medium">Spaced Repetition</p>
+                <p className="text-sm text-muted-foreground">Review your study notes</p>
               </div>
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -184,17 +186,25 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Activity Placeholder */}
-      <div className="bg-card rounded-lg border p-6">
-        <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-        {stats.sessionCount === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Timer className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No study sessions yet. Start your first session to see your activity here!</p>
-          </div>
-        ) : (
-          <p className="text-muted-foreground">Recent sessions will appear here...</p>
-        )}
+      {/* Second Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
+        <div className="bg-card rounded-lg border p-6">
+          <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
+          {stats.sessionCount === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Timer className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No study sessions yet. Start your first session to see your activity here!</p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Recent sessions will appear here...</p>
+          )}
+        </div>
+
+        {/* RSS Feed Widget */}
+        <div>
+          <RSSFeedWidget />
+        </div>
       </div>
     </div>
   )
