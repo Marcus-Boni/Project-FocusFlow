@@ -16,6 +16,7 @@ import {
   Sun
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { toastUtils } from '@/lib/hooks/useToast'
 
 interface UserSettings {
   focusTime: number
@@ -88,10 +89,10 @@ export default function SettingsPage() {
     try {
       // Update timer settings in store
       updateSettings({
-        focusTime: settings.focusTime,
-        shortBreakTime: settings.shortBreakTime,
-        longBreakTime: settings.longBreakTime,
-        cyclesUntilLongBreak: settings.cyclesUntilLongBreak
+        focusTime: settings.focusTime || 25,
+        shortBreakTime: settings.shortBreakTime || 5,
+        longBreakTime: settings.longBreakTime || 15,
+        cyclesUntilLongBreak: settings.cyclesUntilLongBreak || 4
       })
 
       // Save all settings to localStorage
@@ -110,9 +111,11 @@ export default function SettingsPage() {
 
       setSaveMessage('Settings saved successfully!')
       setTimeout(() => setSaveMessage(''), 3000)
+      toastUtils.settings.saved()
     } catch (error) {
       console.error('Error saving settings:', error)
       setSaveMessage('Error saving settings')
+      toastUtils.data.error()
     } finally {
       setIsSaving(false)
     }
@@ -178,7 +181,7 @@ export default function SettingsPage() {
                 min="1"
                 max="60"
                 value={settings.focusTime}
-                onChange={(e) => handleTimerSettingChange('focusTime', parseInt(e.target.value) || 25)}
+                onChange={(e) => handleTimerSettingChange('focusTime', parseInt(e.target.value))}
                 className="w-full px-3 py-2 border rounded-md bg-background"
               />
             </div>
@@ -192,7 +195,7 @@ export default function SettingsPage() {
                 min="1"
                 max="30"
                 value={settings.shortBreakTime}
-                onChange={(e) => handleTimerSettingChange('shortBreakTime', parseInt(e.target.value) || 5)}
+                onChange={(e) => handleTimerSettingChange('shortBreakTime', parseInt(e.target.value))}
                 className="w-full px-3 py-2 border rounded-md bg-background"
               />
             </div>
@@ -206,7 +209,7 @@ export default function SettingsPage() {
                 min="1"
                 max="60"
                 value={settings.longBreakTime}
-                onChange={(e) => handleTimerSettingChange('longBreakTime', parseInt(e.target.value) || 15)}
+                onChange={(e) => handleTimerSettingChange('longBreakTime', parseInt(e.target.value))}
                 className="w-full px-3 py-2 border rounded-md bg-background"
               />
             </div>
@@ -220,7 +223,7 @@ export default function SettingsPage() {
                 min="2"
                 max="10"
                 value={settings.cyclesUntilLongBreak}
-                onChange={(e) => handleTimerSettingChange('cyclesUntilLongBreak', parseInt(e.target.value) || 4)}
+                onChange={(e) => handleTimerSettingChange('cyclesUntilLongBreak', parseInt(e.target.value))}
                 className="w-full px-3 py-2 border rounded-md bg-background"
               />
             </div>
@@ -239,7 +242,10 @@ export default function SettingsPage() {
               <label className="text-sm font-medium mb-2 block">Theme</label>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => setTheme('light')}
+                  onClick={() => {
+                    setTheme('light')
+                    toastUtils.settings.themeChanged('claro')
+                  }}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-md border ${
                     theme === 'light' 
                       ? 'bg-primary text-primary-foreground' 
@@ -250,7 +256,10 @@ export default function SettingsPage() {
                   <span>Light</span>
                 </button>
                 <button
-                  onClick={() => setTheme('dark')}
+                  onClick={() => {
+                    setTheme('dark')
+                    toastUtils.settings.themeChanged('escuro')
+                  }}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-md border ${
                     theme === 'dark' 
                       ? 'bg-primary text-primary-foreground' 
@@ -261,7 +270,10 @@ export default function SettingsPage() {
                   <span>Dark</span>
                 </button>
                 <button
-                  onClick={() => setTheme('system')}
+                  onClick={() => {
+                    setTheme('system')
+                    toastUtils.settings.themeChanged('sistema')
+                  }}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-md border ${
                     theme === 'system' 
                       ? 'bg-primary text-primary-foreground' 

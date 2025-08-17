@@ -1,145 +1,161 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import { useUserStore } from '@/stores/useUserStore'
-import { supabase, StudyArea } from '@/lib/supabase'
-import { Plus, BookOpen, Edit, Trash2 } from 'lucide-react'
+import { useState, useEffect, useCallback } from "react";
+import { useUserStore } from "@/stores/useUserStore";
+import { supabase, StudyArea } from "@/lib/supabase";
+import { Plus, BookOpen, Edit, Trash2 } from "lucide-react";
+import { toastUtils } from "@/lib/hooks/useToast";
 
 const predefinedColors = [
-  '#3B82F6', // Blue
-  '#EF4444', // Red
-  '#10B981', // Green
-  '#F59E0B', // Yellow
-  '#8B5CF6', // Purple
-  '#EC4899', // Pink
-  '#06B6D4', // Cyan
-  '#84CC16', // Lime
-]
+  "#3B82F6", // Blue
+  "#EF4444", // Red
+  "#10B981", // Green
+  "#F59E0B", // Yellow
+  "#8B5CF6", // Purple
+  "#EC4899", // Pink
+  "#06B6D4", // Cyan
+  "#84CC16", // Lime
+];
 
 export default function StudyAreasPage() {
-  const { user } = useUserStore()
-  const [studyAreas, setStudyAreas] = useState<StudyArea[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [editingArea, setEditingArea] = useState<StudyArea | null>(null)
+  const { user } = useUserStore();
+  const [studyAreas, setStudyAreas] = useState<StudyArea[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingArea, setEditingArea] = useState<StudyArea | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    color: predefinedColors[0]
-  })
-
-  
+    name: "",
+    description: "",
+    color: predefinedColors[0],
+  });
 
   const fetchStudyAreas = useCallback(async () => {
-    if (!user) return
+    if (!user) return;
 
     try {
       const { data, error } = await supabase
-        .from('study_areas')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .from("study_areas")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
       if (error) {
-        console.error('Error fetching study areas:', error)
+        console.error("Error fetching study areas:", error);
       } else {
-        setStudyAreas(data || [])
+        setStudyAreas(data || []);
       }
     } catch (error) {
-      console.error('Error fetching study areas:', error)
+      console.error("Error fetching study areas:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [user])
+  }, [user]);
 
   useEffect(() => {
-    fetchStudyAreas()
-  }, [fetchStudyAreas])
-  
+    fetchStudyAreas();
+  }, [fetchStudyAreas]);
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user) return
-    
+    e.preventDefault();
+    if (!user) return;
+
     try {
       if (editingArea) {
         // Update existing area
         const { error } = await supabase
-          .from('study_areas')
+          .from("study_areas")
           .update({
             name: formData.name,
             description: formData.description,
             color: formData.color,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
-          .eq('id', editingArea.id)
+          .eq("id", editingArea.id);
 
         if (!error) {
-          setStudyAreas(areas => 
-            areas.map(area => 
-              area.id === editingArea.id 
+          setStudyAreas((areas) =>
+            areas.map((area) =>
+              area.id === editingArea.id
                 ? { ...area, ...formData, updated_at: new Date().toISOString() }
                 : area
             )
-          )
+          );
+          toastUtils.studyArea.updated(formData.name);
+        } else {
+          toastUtils.studyArea.error();
         }
       } else {
         // Create new area
         const { data, error } = await supabase
-          .from('study_areas')
-          .insert([{
-            user_id: user.id,
-            name: formData.name,
-            description: formData.description,
-            color: formData.color
-          }])
-          .select()
+          .from("study_areas")
+          .insert([
+            {
+              user_id: user.id,
+              name: formData.name,
+              description: formData.description,
+              color: formData.color,
+            },
+          ])
+          .select();
 
         if (!error && data) {
-          setStudyAreas(areas => [data[0], ...areas])
+          setStudyAreas((areas) => [data[0], ...areas]);
+          toastUtils.studyArea.created(formData.name);
+        } else {
+          toastUtils.studyArea.error();
         }
       }
 
       // Reset form
-      setFormData({ name: '', description: '', color: predefinedColors[0] })
-      setShowForm(false)
-      setEditingArea(null)
+      setFormData({ name: "", description: "", color: predefinedColors[0] });
+      setShowForm(false);
+      setEditingArea(null);
     } catch (error) {
-      console.error('Error saving study area:', error)
+      console.error("Error saving study area:", error);
+      toastUtils.studyArea.error();
     }
-  }
+  };
 
   const handleEdit = (area: StudyArea) => {
-    setEditingArea(area)
+    setEditingArea(area);
     setFormData({
       name: area.name,
-      description: area.description || '',
-      color: area.color
-    })
-    setShowForm(true)
-  }
+      description: area.description || "",
+      color: area.color,
+    });
+    setShowForm(true);
+  };
 
   const handleDelete = async (areaId: string) => {
-    if (!confirm('Are you sure you want to delete this study area?')) return
+    const areaToDelete = studyAreas.find((area) => area.id === areaId);
+    if (
+      !confirm(`Tem certeza que deseja deletar a área "${areaToDelete?.name}"?`)
+    )
+      return;
 
     try {
       const { error } = await supabase
-        .from('study_areas')
+        .from("study_areas")
         .delete()
-        .eq('id', areaId)
+        .eq("id", areaId);
 
       if (!error) {
-        setStudyAreas(areas => areas.filter(area => area.id !== areaId))
+        setStudyAreas((areas) => areas.filter((area) => area.id !== areaId));
+        toastUtils.studyArea.deleted(areaToDelete?.name || "Área");
+      } else {
+        toastUtils.studyArea.error();
       }
     } catch (error) {
-      console.error('Error deleting study area:', error)
+      console.error("Error deleting study area:", error);
+      toastUtils.studyArea.error();
     }
-  }
+  };
 
   const resetForm = () => {
-    setFormData({ name: '', description: '', color: predefinedColors[0] })
-    setShowForm(false)
-    setEditingArea(null)
-  }
+    setFormData({ name: "", description: "", color: predefinedColors[0] });
+    setShowForm(false);
+    setEditingArea(null);
+  };
 
   if (isLoading) {
     return (
@@ -151,7 +167,7 @@ export default function StudyAreasPage() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -178,16 +194,18 @@ export default function StudyAreasPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-card rounded-lg border p-6 w-full max-w-md">
             <h2 className="text-lg font-semibold mb-4">
-              {editingArea ? 'Edit Study Area' : 'Add Study Area'}
+              {editingArea ? "Edit Study Area" : "Add Study Area"}
             </h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Name</label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="e.g., JavaScript, React, Algorithms"
                   required
@@ -195,10 +213,14 @@ export default function StudyAreasPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Description (Optional)</label>
+                <label className="block text-sm font-medium mb-2">
+                  Description (Optional)
+                </label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                   rows={3}
                   placeholder="What will you be studying in this area?"
@@ -214,7 +236,9 @@ export default function StudyAreasPage() {
                       type="button"
                       onClick={() => setFormData({ ...formData, color })}
                       className={`w-8 h-8 rounded-full border-2 ${
-                        formData.color === color ? 'border-foreground' : 'border-transparent'
+                        formData.color === color
+                          ? "border-foreground"
+                          : "border-transparent"
                       }`}
                       style={{ backgroundColor: color }}
                     />
@@ -227,7 +251,7 @@ export default function StudyAreasPage() {
                   type="submit"
                   className="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
                 >
-                  {editingArea ? 'Update' : 'Create'}
+                  {editingArea ? "Update" : "Create"}
                 </button>
                 <button
                   type="button"
@@ -248,7 +272,8 @@ export default function StudyAreasPage() {
           <BookOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-semibold mb-2">No Study Areas Yet</h3>
           <p className="text-muted-foreground mb-4">
-            Create your first study area to start organizing your learning journey.
+            Create your first study area to start organizing your learning
+            journey.
           </p>
           <button
             onClick={() => setShowForm(true)}
@@ -313,5 +338,5 @@ export default function StudyAreasPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

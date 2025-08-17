@@ -5,6 +5,7 @@ import { useSessionStore } from '@/stores/useSessionStore'
 import { useUserStore } from '@/stores/useUserStore'
 import { supabase, StudyArea } from '@/lib/supabase'
 import { Play, Pause, Square, SkipForward, Settings, BookOpen } from 'lucide-react'
+import { toastUtils } from '@/lib/hooks/useToast'
 
 export default function StudyTimerPage() {
   const { user } = useUserStore()
@@ -74,11 +75,14 @@ export default function StudyTimerPage() {
 
       if (error) {
         console.error('Error saving session:', error)
+        toastUtils.data.error()
       } else {
         console.log('Session saved successfully')
+        toastUtils.timer.sessionSaved()
       }
     } catch (error) {
       console.error('Error saving session:', error)
+      toastUtils.data.error()
     }
   }, [user, selectedStudyArea, sessionStartTime, focusTime, timeRemaining, currentNotes, sessionType, currentCycle])
 
@@ -95,6 +99,9 @@ export default function StudyTimerPage() {
         icon: '/favicon.ico'
       })
     }
+    
+    // Show toast notification
+    toastUtils.timer.completed(sessionType)
     
     switchSession()
     setSessionStartTime(null)
@@ -135,6 +142,9 @@ export default function StudyTimerPage() {
     if (!sessionStartTime) {
       setSessionStartTime(new Date())
     }
+    
+    // Show toast notification
+    toastUtils.timer.started(selectedStudyArea?.name)
   }
 
   const handleStop = async () => {
@@ -144,6 +154,9 @@ export default function StudyTimerPage() {
     }
     stopTimer()
     setSessionStartTime(null)
+    
+    // Show toast notification
+    toastUtils.timer.stopped()
   }
 
   const formatTime = (seconds: number) => {
@@ -276,7 +289,10 @@ export default function StudyTimerPage() {
               </button>
             ) : isPaused ? (
               <button
-                onClick={startTimer}
+                onClick={() => {
+                  startTimer()
+                  toastUtils.timer.resumed()
+                }}
                 className="flex items-center space-x-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
               >
                 <Play className="w-5 h-5" />
@@ -284,7 +300,10 @@ export default function StudyTimerPage() {
               </button>
             ) : (
               <button
-                onClick={pauseTimer}
+                onClick={() => {
+                  pauseTimer()
+                  toastUtils.timer.paused()
+                }}
                 className="flex items-center space-x-2 bg-secondary px-6 py-3 rounded-lg hover:bg-secondary/90 transition-colors"
               >
                 <Pause className="w-5 h-5" />

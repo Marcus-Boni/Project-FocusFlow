@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Brain, Eye, EyeOff, Github } from 'lucide-react'
+import { toastUtils } from '@/lib/hooks/useToast'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -27,12 +28,15 @@ export default function LoginPage() {
 
       if (error) {
         setError(error.message)
+        toastUtils.auth.loginError()
       } else {
+        toastUtils.auth.loginSuccess()
         router.push('/dashboard')
       }
     } catch (err) {
       console.error(err)
       setError('An unexpected error occurred')
+      toastUtils.auth.loginError()
     } finally {
       setIsLoading(false)
     }
@@ -50,14 +54,20 @@ export default function LoginPage() {
         }
       })
 
+      
       if (error) {
         setError(error.message)
+        toastUtils.auth.loginError()
         setIsLoading(false)
       }
     } catch (err) {
       console.error(err)
       setError('An unexpected error occurred')
+      toastUtils.auth.loginError()
       setIsLoading(false)
+    } finally {
+      setIsLoading(false)
+      toastUtils.auth.loginSuccess()
     }
   }
 

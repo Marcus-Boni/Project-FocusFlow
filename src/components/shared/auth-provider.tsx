@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useUserStore } from '@/stores/useUserStore'
+import { toastUtils } from '@/lib/hooks/useToast'
 
 interface AuthProviderProps {
   children: React.ReactNode
@@ -26,6 +27,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          toastUtils.auth.logoutSuccess()
+        }
         setUser(session?.user ?? null)
         setLoading(false)
       }

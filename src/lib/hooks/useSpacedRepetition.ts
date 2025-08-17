@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useUserStore } from '@/stores/useUserStore'
+import { toastUtils } from './useToast'
 
 // Spaced Repetition intervals (in days) - based on SuperMemo SM-2 algorithm
 const REPETITION_INTERVALS = [1, 3, 7, 14, 30, 90, 180, 365]
@@ -93,10 +94,14 @@ export function useSpacedRepetition() {
       if (!error && data) {
         const newNote = data[0]
         setNotes(prev => [newNote, ...prev])
+        toastUtils.spacedRepetition.noteCreated()
         return newNote
+      } else {
+        toastUtils.data.error()
       }
     } catch (error) {
       console.error('Error creating note:', error)
+      toastUtils.data.error()
     }
     return null
   }

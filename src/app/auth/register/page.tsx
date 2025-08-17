@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Brain, Eye, EyeOff, Github } from 'lucide-react'
+import { toastUtils } from '@/lib/hooks/useToast'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
@@ -23,12 +24,14 @@ export default function RegisterPage() {
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
+      toastUtils.auth.registerError()
       setIsLoading(false)
       return
     }
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters long')
+      toastUtils.auth.registerError()
       setIsLoading(false)
       return
     }
@@ -44,12 +47,15 @@ export default function RegisterPage() {
 
       if (error) {
         setError(error.message)
+        toastUtils.auth.registerError()
       } else {
         setMessage('Check your email for the confirmation link!')
+        toastUtils.auth.emailSent()
       }
     } catch (err) {
       console.error(err)
       setError('An unexpected error occurred')
+      toastUtils.auth.registerError()
     } finally {
       setIsLoading(false)
     }
