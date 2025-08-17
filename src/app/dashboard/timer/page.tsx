@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useSessionStore } from '@/stores/useSessionStore'
 import { useUserStore } from '@/stores/useUserStore'
 import { supabase, StudyArea } from '@/lib/supabase'
-import { Play, Pause, Square, SkipForward, Settings, BookOpen } from 'lucide-react'
+import { Play, Pause, Square, SkipForward, Settings, BookOpen, CheckCircle, X, Save } from 'lucide-react'
 import { toastUtils } from '@/lib/hooks/useToast'
 
 export default function StudyTimerPage() {
@@ -26,13 +26,31 @@ export default function StudyTimerPage() {
     switchSession,
     setTimeRemaining,
     setCurrentNotes,
-    setSelectedStudyArea
+    setSelectedStudyArea,
+    updateSettings
   } = useSessionStore()
 
   const [studyAreas, setStudyAreas] = useState<StudyArea[]>([])
   const [showAreaSelector, setShowAreaSelector] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null)
+  
+  // Settings form state
+  const [settingsForm, setSettingsForm] = useState({
+    focusTime: focusTime,
+    shortBreakTime: shortBreakTime,
+    longBreakTime: longBreakTime
+  })
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Sync settings form with store when settings change
+  useEffect(() => {
+    setSettingsForm({
+      focusTime,
+      shortBreakTime,
+      longBreakTime
+    })
+  }, [focusTime, shortBreakTime, longBreakTime])
 
   // Fetch study areas
   useEffect(() => {
@@ -85,6 +103,60 @@ export default function StudyTimerPage() {
       toastUtils.data.error()
     }
   }, [user, selectedStudyArea, sessionStartTime, focusTime, timeRemaining, currentNotes, sessionType, currentCycle])
+
+  const handleCompleteSession = useCallback(async () => {
+    if (sessionType === 'focus' && selectedStudyArea && sessionStartTime) {
+      await saveSession()
+      stopTimer()
+      setSessionStartTime(null)
+      toastUtils.timer.completed('focus')
+    }
+  }, [sessionType, selectedStudyArea, sessionStartTime, saveSession, stopTimer])
+
+  const handleFinishSession = useCallback(async () => {
+    if (sessionType === 'focus' && selectedStudyArea && sessionStartTime) {
+      // Show confirmation if there are notes
+      if (currentNotes.length > 0) {
+        const shouldFinish = confirm(
+          `Finalizar sessão de estudo para "${selectedStudyArea.name}"?\n\n` +
+          `Suas notas (${currentNotes.length} caracteres) serão salvas automaticamente.`
+        )
+        if (!shouldFinish) return
+      }
+
+      await saveSession()
+      stopTimer()
+      setSessionStartTime(null)
+      setCurrentNotes('') // Clear notes after saving
+      
+      // Show success message
+      toastUtils.timer.sessionSaved()
+      
+      // Optional: Ask if user wants to start a break after a short delay
+      setTimeout(() => {
+        const shouldStartBreak = confirm('Sessão finalizada com sucesso! 🎉\n\nDeseja iniciar uma pausa agora?')
+        if (shouldStartBreak) {
+          switchSession()
+          startTimer()
+        }
+      }, 1500)
+    }
+  }, [sessionType, selectedStudyArea, sessionStartTime, currentNotes, saveSession, stopTimer, setCurrentNotes, switchSession, startTimer])
+
+  const handleSettingsSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    updateSettings(settingsForm)
+    setShowSettings(false)
+    toastUtils.settings.saved()
+  }
+
+  const resetSettingsForm = () => {
+    setSettingsForm({
+      focusTime: focusTime,
+      shortBreakTime: shortBreakTime,
+      longBreakTime: longBreakTime
+    })
+  }
 
   const handleSessionComplete = useCallback(async () => {
     if (sessionType === 'focus' && selectedStudyArea && sessionStartTime) {
@@ -182,6 +254,98 @@ export default function StudyTimerPage() {
         </p>
       </div>
 
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg border p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Timer Settings</h2>
+              <button
+                onClick={() => {
+                  setShowSettings(false)
+                  resetSettingsForm()
+                }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSettingsSubmit} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium block mb-2">
+                  Focus Time (minutes)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={settingsForm.focusTime}
+                  onChange={(e) => setSettingsForm(prev => ({
+                    ...prev,
+                    focusTime: parseInt(e.target.value) || 25
+                  }))}
+                  className="w-full px-3 py-2 border rounded-md bg-background"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium block mb-2">
+                  Short Break (minutes)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={settingsForm.shortBreakTime}
+                  onChange={(e) => setSettingsForm(prev => ({
+                    ...prev,
+                    shortBreakTime: parseInt(e.target.value) || 5
+                  }))}
+                  className="w-full px-3 py-2 border rounded-md bg-background"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium block mb-2">
+                  Long Break (minutes)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={settingsForm.longBreakTime}
+                  onChange={(e) => setSettingsForm(prev => ({
+                    ...prev,
+                    longBreakTime: parseInt(e.target.value) || 15
+                  }))}
+                  className="w-full px-3 py-2 border rounded-md bg-background"
+                />
+              </div>
+              
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSettings(false)
+                    resetSettingsForm()
+                  }}
+                  className="flex-1 px-4 py-2 border rounded-md hover:bg-accent transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                >
+                  Save Settings
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Study Area Selector Modal */}
       {showAreaSelector && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -278,99 +442,221 @@ export default function StudyTimerPage() {
           </div>
 
           {/* Controls */}
-          <div className="flex justify-center space-x-4">
-            {!isActive ? (
+          <div className="space-y-4">
+            {/* Main Control Buttons */}
+            <div className="flex flex-wrap justify-center gap-3">
+              {!isActive ? (
+                <button
+                  onClick={handleStart}
+                  className="flex items-center space-x-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  <Play className="w-5 h-5" />
+                  <span>Start</span>
+                </button>
+              ) : isPaused ? (
+                <button
+                  onClick={() => {
+                    startTimer()
+                    toastUtils.timer.resumed()
+                  }}
+                  className="flex items-center space-x-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  <Play className="w-5 h-5" />
+                  <span>Resume</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    pauseTimer()
+                    toastUtils.timer.paused()
+                  }}
+                  className="flex items-center space-x-2 bg-secondary px-6 py-3 rounded-lg hover:bg-secondary/90 transition-colors"
+                >
+                  <Pause className="w-5 h-5" />
+                  <span>Pause</span>
+                </button>
+              )}
+
               <button
-                onClick={handleStart}
-                className="flex items-center space-x-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
+                onClick={handleStop}
+                className="flex items-center space-x-2 border px-6 py-3 rounded-lg hover:bg-accent transition-colors"
               >
-                <Play className="w-5 h-5" />
-                <span>Start</span>
+                <Square className="w-5 h-5" />
+                <span>Stop</span>
               </button>
-            ) : isPaused ? (
+
               <button
                 onClick={() => {
-                  startTimer()
-                  toastUtils.timer.resumed()
+                  switchSession()
+                  setSessionStartTime(null)
                 }}
-                className="flex items-center space-x-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
+                className="flex items-center space-x-2 border px-6 py-3 rounded-lg hover:bg-accent transition-colors"
               >
-                <Play className="w-5 h-5" />
-                <span>Resume</span>
+                <SkipForward className="w-5 h-5" />
+                <span>Skip</span>
               </button>
-            ) : (
+
+              {/* Settings Button */}
               <button
-                onClick={() => {
-                  pauseTimer()
-                  toastUtils.timer.paused()
-                }}
-                className="flex items-center space-x-2 bg-secondary px-6 py-3 rounded-lg hover:bg-secondary/90 transition-colors"
+                onClick={() => setShowSettings(true)}
+                className="flex items-center space-x-2 border px-6 py-3 rounded-lg hover:bg-accent transition-colors"
+                disabled={isActive && !isPaused}
+                title={isActive && !isPaused ? "Pause timer to change settings" : "Timer Settings"}
               >
-                <Pause className="w-5 h-5" />
-                <span>Pause</span>
+                <Settings className="w-5 h-5" />
+                <span>Settings</span>
               </button>
+            </div>
+
+            {/* Session Action Buttons - Only show during focus sessions */}
+            {sessionType === 'focus' && selectedStudyArea && sessionStartTime && (
+              <div className="flex flex-wrap justify-center gap-3 pt-2 border-t">
+                <div className="text-center w-full mb-2">
+                  <p className="text-sm text-muted-foreground">Session Actions</p>
+                </div>
+                
+                {/* Complete Session Button - Only during active sessions */}
+                {isActive && (
+                  <button
+                    onClick={handleCompleteSession}
+                    className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
+                    title="Complete full pomodoro session (wait for timer to finish)"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Complete Session</span>
+                  </button>
+                )}
+
+                {/* Finish Session Button - Available anytime during focus session */}
+                <button
+                  onClick={handleFinishSession}
+                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  title="Finish and save current session now"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Finish & Save Now</span>
+                </button>
+              </div>
             )}
-
-            <button
-              onClick={handleStop}
-              className="flex items-center space-x-2 border px-6 py-3 rounded-lg hover:bg-accent transition-colors"
-            >
-              <Square className="w-5 h-5" />
-              <span>Stop</span>
-            </button>
-
-            <button
-              onClick={() => {
-                switchSession()
-                setSessionStartTime(null)
-              }}
-              className="flex items-center space-x-2 border px-6 py-3 rounded-lg hover:bg-accent transition-colors"
-            >
-              <SkipForward className="w-5 h-5" />
-              <span>Skip</span>
-            </button>
           </div>
         </div>
       </div>
 
+      {/* Session Statistics */}
+      {sessionType === 'focus' && sessionStartTime && (
+        <div className="bg-card rounded-lg border p-6">
+          <h3 className="text-lg font-semibold mb-4">Session Info</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="font-medium text-muted-foreground">Study Area</p>
+              <div className="flex items-center space-x-2 mt-1">
+                {selectedStudyArea && (
+                  <>
+                    <div 
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: selectedStudyArea.color }}
+                    />
+                    <span>{selectedStudyArea.name}</span>
+                  </>
+                )}
+              </div>
+            </div>
+            <div>
+              <p className="font-medium text-muted-foreground">Time Studied</p>
+              <p className="text-lg font-mono">
+                {formatTime((focusTime * 60) - timeRemaining)}
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-muted-foreground">Session Type</p>
+              <p className="capitalize">{sessionType}</p>
+            </div>
+            <div>
+              <p className="font-medium text-muted-foreground">Cycle</p>
+              <p>{currentCycle}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Notes Section */}
       {sessionType === 'focus' && (
         <div className="bg-card rounded-lg border p-6">
-          <h3 className="text-lg font-semibold mb-4">Session Notes</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Session Notes</h3>
+            {selectedStudyArea && sessionStartTime && (
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <span>Auto-save on finish</span>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              </div>
+            )}
+          </div>
           <textarea
             value={currentNotes}
             onChange={(e) => setCurrentNotes(e.target.value)}
             placeholder="Take notes about what you're learning or working on..."
             className="w-full h-32 px-3 py-2 border rounded-md bg-background resize-none"
           />
-          <p className="text-xs text-muted-foreground mt-2">
-            These notes will be saved with your session when it completes.
-          </p>
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-xs text-muted-foreground">
+              {selectedStudyArea && sessionStartTime 
+                ? "Notes will be saved when you complete or finish the session."
+                : "Select a study area and start the timer to save notes."
+              }
+            </p>
+            {currentNotes.length > 0 && (
+              <span className="text-xs text-muted-foreground">
+                {currentNotes.length} characters
+              </span>
+            )}
+          </div>
+          
+          {/* Quick save button for notes during active session */}
+          {selectedStudyArea && sessionStartTime && currentNotes.length > 10 && (
+            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Want to save your progress now?
+                </p>
+                <button
+                  onClick={handleFinishSession}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm"
+                >
+                  Finish & Save Session
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Settings Info */}
+      {/* Current Settings Display */}
       <div className="bg-card rounded-lg border p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Timer Settings</h3>
-          <Settings className="w-5 h-5 text-muted-foreground" />
+          <h3 className="text-lg font-semibold">Current Timer Settings</h3>
+          <button 
+            onClick={() => setShowSettings(true)}
+            className="text-primary hover:text-primary/80 transition-colors"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div className="text-center">
+          <div className="text-center p-3 bg-muted/50 rounded-lg">
             <p className="font-medium">Focus Time</p>
-            <p className="text-muted-foreground">{focusTime} minutes</p>
+            <p className="text-lg font-mono mt-1">{focusTime}m</p>
           </div>
-          <div className="text-center">
+          <div className="text-center p-3 bg-muted/50 rounded-lg">
             <p className="font-medium">Short Break</p>
-            <p className="text-muted-foreground">{shortBreakTime} minutes</p>
+            <p className="text-lg font-mono mt-1">{shortBreakTime}m</p>
           </div>
-          <div className="text-center">
+          <div className="text-center p-3 bg-muted/50 rounded-lg">
             <p className="font-medium">Long Break</p>
-            <p className="text-muted-foreground">{longBreakTime} minutes</p>
+            <p className="text-lg font-mono mt-1">{longBreakTime}m</p>
           </div>
         </div>
         <p className="text-xs text-muted-foreground text-center mt-4">
-          Customize these settings in your preferences
+          Click the settings icon to customize these values
         </p>
       </div>
     </div>
