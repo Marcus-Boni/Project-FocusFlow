@@ -218,6 +218,4 @@ FocusFlow foi inspirado em:
 
 ---
 
-**Desenvolvido com ❤️ para a comunidade de desenvolvedores**
-
-Tem alguma dúvida? Abra uma [issue](../../issues) ou entre em contato!
+**Desenvolvido com ❤️ por Marcus Boni**
