@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useUserStore } from '@/stores/useUserStore'
 import { supabase } from '@/lib/supabase'
 import { MotivationWidget } from '@/components/shared/motivation-widget'
-import { RSSFeedWidget } from '@/components/shared/rss-feed-widget'
-import { Timer, BookOpen, BarChart3, Clock, Target, Award, TrendingUp } from 'lucide-react'
+import { NewsWidget } from '@/components/shared/news-widget'
+import { Timer, BookOpen, BarChart3, Clock, Target, Award, TrendingUp, Newspaper } from 'lucide-react'
 
 interface DashboardStats {
   totalStudyTime: number
@@ -329,6 +329,14 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">Review your study notes</p>
               </div>
             </Link>
+
+            <Link href="/dashboard/news" className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent transition-colors">
+              <Newspaper className="w-8 h-8 text-primary" />
+              <div className="text-left">
+                <p className="font-medium">Tech News</p>
+                <p className="text-sm text-muted-foreground">Latest articles & insights</p>
+              </div>
+            </Link>
           </div>
         </div>
 
@@ -357,14 +365,14 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* RSS Feed Widget */}
+        {/* Tech News Widget */}
         <div>
-          <RSSFeedWidget />
+          <NewsWidget maxArticles={10} showFilters={false} />
         </div>
       </div>
        {/* Streak Section */}
-      <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 rounded-lg border p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-gradient-to-r from-sky-200 via-emerald-100 to-amber-50 dark:from-sky-900/20 dark:via-emerald-900/20 dark:to-amber-900/20 rounded-lg border p-6">
+        <div className="flex items-ce</div>nter justify-between mb-4">
           <h2 className="text-xl font-bold">Study Streak 🔥</h2>
           {stats.longestStreak > 0 && (
             <div className="text-right">

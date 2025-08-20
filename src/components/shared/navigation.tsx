@@ -15,7 +15,8 @@ import {
   LogOut,
   User,
   History,
-  Target
+  Target,
+  Newspaper
 } from 'lucide-react'
 
 const navigationItems = [
@@ -48,6 +49,11 @@ const navigationItems = [
     name: 'History',
     href: '/dashboard/history',
     icon: History
+  },
+  {
+    name: 'Tech News',
+    href: '/dashboard/news',
+    icon: Newspaper
   },
   {
     name: 'Settings',
