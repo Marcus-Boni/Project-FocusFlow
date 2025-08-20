@@ -1,56 +1,8 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { Brain, Target, Trophy, Zap } from 'lucide-react'
-
-interface MotivationalContent {
-  quote: string
-  author?: string
-  tip: string
-  neuroscience: string
-  icon: React.ElementType
-  color: string
-}
-
-const motivationalContents: MotivationalContent[] = [
-  {
-    quote: "The expert in anything was once a beginner.",
-    author: "Helen Hayes",
-    tip: "Break complex topics into smaller, manageable chunks",
-    neuroscience: "Chunking helps the prefrontal cortex process information more effectively",
-    icon: Brain,
-    color: "bg-blue-500"
-  },
-  {
-    quote: "Progress, not perfection.",
-    tip: "Focus on consistent daily practice rather than perfect sessions",
-    neuroscience: "Regular practice strengthens neural pathways through repetition",
-    icon: Target,
-    color: "bg-green-500"
-  },
-  {
-    quote: "Learning never exhausts the mind.",
-    author: "Leonardo da Vinci",
-    tip: "Take active breaks to help consolidate what you've learned",
-    neuroscience: "Rest periods allow the brain to replay and strengthen memories",
-    icon: Zap,
-    color: "bg-purple-500"
-  },
-  {
-    quote: "The best time to plant a tree was 20 years ago. The second best time is now.",
-    tip: "Start with just 5 minutes of focused study today",
-    neuroscience: "Small wins activate the brain's reward system, building motivation",
-    icon: Trophy,
-    color: "bg-yellow-500"
-  },
-  {
-    quote: "Code is poetry written in logic.",
-    tip: "Connect new concepts to what you already know",
-    neuroscience: "Making connections activates multiple brain regions, improving retention",
-    icon: Brain,
-    color: "bg-indigo-500"
-  }
-]
+import { useState } from 'react'
+import { Brain, Target, Trophy, Zap, RefreshCw } from 'lucide-react'
+import { useMotivation } from '@/lib/hooks/useMotivation'
 
 interface MotivationWidgetProps {
   studyStreak?: number
@@ -63,63 +15,150 @@ export function MotivationWidget({
   totalSessions = 0, 
   currentSessionType = 'idle' 
 }: MotivationWidgetProps) {
-  const [currentContent, setCurrentContent] = useState<MotivationalContent>(motivationalContents[0])
   const [showNeuroscience, setShowNeuroscience] = useState(false)
 
-  useEffect(() => {
-    // Select content based on user progress and current state
-    let contentIndex = 0
-    
-    if (currentSessionType === 'break') {
-      // During breaks, show content about rest and consolidation
-      contentIndex = 2
-    } else if (studyStreak >= 7) {
-      // For consistent users, show advanced motivation
-      contentIndex = 4
-    } else if (totalSessions >= 10) {
-      // For experienced users, show progress-focused content
-      contentIndex = 1
-    } else if (totalSessions === 0) {
-      // For beginners, show getting-started content
-      contentIndex = 3
-    } else {
-      // For regular users, rotate based on day
-      contentIndex = new Date().getDate() % motivationalContents.length
-    }
-    
-    setCurrentContent(motivationalContents[contentIndex])
-  }, [studyStreak, totalSessions, currentSessionType])
+  const getUserLevel = () => {
+    if (totalSessions >= 50) return 'advanced'
+    if (totalSessions >= 10) return 'intermediate'
+    return 'beginner'
+  }
 
-  const Icon = currentContent.icon
+  const {
+    content,
+    isLoading,
+    refresh
+  } = useMotivation({
+    sessionType: currentSessionType,
+    userLevel: getUserLevel(),
+    studyStreak,
+    totalSessions
+  })
+
+  const getIconForCategory = (category: string) => {
+    switch (category) {
+      case 'focus':
+      case 'attention':
+        return Target
+      case 'memory':
+      case 'learning':
+        return Brain
+      case 'motivation':
+        return Trophy
+      default:
+        return Zap
+    }
+  }
+
+  const getColorForCategory = (category: string) => {
+    switch (category) {
+      case 'focus':
+      case 'attention':
+        return 'bg-blue-500'
+      case 'memory':
+      case 'learning':
+        return 'bg-green-500'
+      case 'motivation':
+        return 'bg-yellow-500'
+      case 'break':
+        return 'bg-purple-500'
+      default:
+        return 'bg-indigo-500'
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="bg-card rounded-lg border p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-lg">Daily Motivation</h3>
+          <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+        </div>
+        <div className="space-y-3">
+          <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+          <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!content.quote || !content.tip || !content.insight) {
+    return (
+      <div className="bg-card rounded-lg border p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-lg">Daily Motivation</h3>
+          <button
+            onClick={refresh}
+            className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="text-center text-muted-foreground py-8">
+          Unable to load motivation content. Please try refreshing.
+        </div>
+      </div>
+    )
+  }
+
+  const Icon = getIconForCategory(content.tip.category)
+  const color = getColorForCategory(content.tip.category)
 
   return (
     <div className="bg-card rounded-lg border p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-lg">Daily Motivation</h3>
-        <div className={`p-2 rounded-full ${currentContent.color} bg-opacity-20`}>
-          <Icon className={`w-5 h-5 text-white`} />
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={refresh}
+            className={`p-2 rounded-full ${color} bg-opacity-20 hover:bg-opacity-30 transition-all`}
+            title="Refresh content"
+          >
+            <RefreshCw className="w-4 h-4 text-current" />
+          </button>
+          <div className={`p-2 rounded-full ${color} bg-opacity-20`}>
+            <Icon className="w-5 h-5 text-white" />
+          </div>
         </div>
       </div>
 
-      {/* Main Quote */}
+      {/* API Quote */}
       <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
         <blockquote className="text-sm italic mb-2">
-          &ldquo;{currentContent.quote}&rdquo;
+          &ldquo;{content.quote.content}&rdquo;
         </blockquote>
-        {currentContent.author && (
-          <cite className="text-xs text-muted-foreground">— {currentContent.author}</cite>
-        )}
+        <div className="flex items-center justify-between">
+          <cite className="text-xs text-muted-foreground">
+            — {content.quote.author}
+          </cite>
+          {content.quote.source === 'quotable' && (
+            <span className="ml-2 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded text-xs">
+              via Quotable.io
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Study Tip */}
       <div className="bg-muted rounded-lg p-4">
         <h4 className="font-medium mb-2 flex items-center">
           <Target className="w-4 h-4 mr-2 text-primary" />
-          Study Tip
+          {content.tip.title}
         </h4>
-        <p className="text-sm text-muted-foreground">
-          {currentContent.tip}
+        <p className="text-sm text-muted-foreground mb-2">
+          {content.tip.content}
         </p>
+        <div className="flex items-center space-x-2">
+          <span className={`px-2 py-1 rounded text-xs ${
+            content.tip.difficulty === 'beginner' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300' :
+            content.tip.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300' :
+            'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300'
+          }`}>
+            {content.tip.difficulty}
+          </span>
+          <span className="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 rounded text-xs">
+            {content.tip.category}
+          </span>
+        </div>
       </div>
 
       {/* Neuroscience Insight Toggle */}
@@ -133,10 +172,23 @@ export function MotivationWidget({
         </button>
         
         {showNeuroscience && (
-          <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              🧠 <strong>Science:</strong> {currentContent.neuroscience}
-            </p>
+          <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800 space-y-3">
+            <div>
+              <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                🧠 {content.insight.title}
+              </h5>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                {content.insight.content}
+              </p>
+            </div>
+            <div className="border-t border-blue-200 dark:border-blue-700 pt-2">
+              <p className="text-xs text-blue-600 dark:text-blue-400">
+                <strong>Application:</strong> {content.insight.practical_application}
+              </p>
+              <p className="text-xs text-blue-500 dark:text-blue-500 mt-1">
+                Source: {content.insight.source}
+              </p>
+            </div>
           </div>
         )}
       </div>
