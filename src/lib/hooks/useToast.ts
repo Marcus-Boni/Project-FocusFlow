@@ -174,7 +174,9 @@ export const toastUtils = {
     registerSuccess: () => toast.success('Conta criada com sucesso! Bem-vindo! 🎉'),
     registerError: () => toast.error('Erro ao criar conta. Tente novamente.'),
     logoutSuccess: () => toast.success('Logout realizado com sucesso!'),
-    emailSent: () => toast.success('Email de confirmação enviado! 📧'),
+    emailSent: () => toast.success('Email de recuperação enviado! 📧'),
+    passwordResetSuccess: () => toast.success('Senha redefinida com sucesso! 🔐'),
+    passwordResetError: () => toast.error('Erro ao redefinir senha. Tente novamente.'),
   },
   
   timer: {
