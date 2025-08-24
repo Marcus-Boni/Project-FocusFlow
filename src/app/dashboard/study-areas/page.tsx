@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useUserStore } from "@/stores/useUserStore";
 import { supabase, StudyArea } from "@/lib/supabase";
-import { Plus, BookOpen, Edit, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, BookOpen, Edit, Trash2, AlertTriangle, Clock, FileText } from "lucide-react";
 import { toastUtils } from "@/lib/hooks/useToast";
+import Link from "next/link";
 
 const predefinedColors = [
   "#3B82F6", // Blue
@@ -401,6 +402,25 @@ export default function StudyAreasPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Last Study:</span>
                   <span>Never</span>
+                </div>
+              </div>
+
+              <div className="pt-4 mt-4 border-t">
+                <div className="flex space-x-2">
+                  <Link 
+                    href={`/dashboard/timer?area=${area.id}`}
+                    className="flex-1 bg-primary text-primary-foreground px-3 py-2 rounded-md hover:bg-primary/90 transition-colors text-center text-sm flex items-center justify-center space-x-2"
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span>Study Timer</span>
+                  </Link>
+                  <Link 
+                    href={`/dashboard/study-areas/${area.id}/notes`}
+                    className="flex-1 bg-secondary text-secondary-foreground px-3 py-2 rounded-md hover:bg-secondary/80 transition-colors text-center text-sm flex items-center justify-center space-x-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>Notes</span>
+                  </Link>
                 </div>
               </div>
             </div>

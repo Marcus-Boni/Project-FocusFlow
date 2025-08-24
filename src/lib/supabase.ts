@@ -35,3 +35,15 @@ export interface User {
   avatar_url?: string
   full_name?: string
 }
+
+// Re-export enhanced note types
+export type { 
+  StudyNote, 
+  NoteCategory, 
+  NoteBlock, 
+  NoteRelationship, 
+  ReviewAnalytics, 
+  StudyGoal,
+  StudyNoteWithRelations,
+  NoteTakingTemplate
+} from '@/types/notes'
