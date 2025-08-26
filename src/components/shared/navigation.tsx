@@ -16,7 +16,8 @@ import {
   User,
   History,
   Target,
-  Newspaper
+  Newspaper,
+  Goal
 } from 'lucide-react'
 
 const navigationItems = [
@@ -29,6 +30,11 @@ const navigationItems = [
     name: 'Study Timer',
     href: '/dashboard/timer',
     icon: Timer
+  },
+  {
+    name: 'Goals',
+    href: '/dashboard/goals',
+    icon: Goal
   },
   {
     name: 'Study Areas',

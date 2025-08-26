@@ -21,11 +21,7 @@ import {
   Tag
 } from "lucide-react";
 
-interface NotesPageProps {
-  studyAreaId?: string;
-}
-
-export default function NotesPage({ studyAreaId }: NotesPageProps) {
+export default function NotesPage() {
   const { user } = useUserStore();
   const searchParams = useSearchParams();
   const [notes, setNotes] = useState<StudyNote[]>([]);
@@ -37,8 +33,8 @@ export default function NotesPage({ studyAreaId }: NotesPageProps) {
   const [needsReview, setNeedsReview] = useState(false);
   const [reviewNotes, setReviewNotes] = useState<StudyNote[]>([]);
 
-  // Get current study area from URL params if not provided
-  const currentStudyAreaId = studyAreaId || searchParams.get('area') || '';
+  // Get current study area from URL params
+  const currentStudyAreaId = searchParams.get('area') || '';
 
   const loadData = useCallback(async () => {
     if (!user) return;

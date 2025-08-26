@@ -6,7 +6,7 @@ import { useUserStore } from '@/stores/useUserStore'
 import { supabase } from '@/lib/supabase'
 import { MotivationWidget } from '@/components/shared/motivation-widget'
 import { NewsWidget } from '@/components/shared/news-widget'
-import { Timer, BookOpen, BarChart3, Clock, Target, Award, TrendingUp, Newspaper } from 'lucide-react'
+import { Timer, BookOpen, BarChart3, Clock, Target, Award, TrendingUp, Newspaper, Goal } from 'lucide-react'
 
 interface DashboardStats {
   totalStudyTime: number
@@ -303,6 +303,14 @@ export default function DashboardPage() {
               <div className="text-left">
                 <p className="font-medium">Start Study Session</p>
                 <p className="text-sm text-muted-foreground">Begin a focused study session</p>
+              </div>
+            </Link>
+
+            <Link href="/dashboard/goals" className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent transition-colors">
+              <Goal className="w-8 h-8 text-primary" />
+              <div className="text-left">
+                <p className="font-medium">Manage Goals</p>
+                <p className="text-sm text-muted-foreground">Set and track your objectives</p>
               </div>
             </Link>
 
