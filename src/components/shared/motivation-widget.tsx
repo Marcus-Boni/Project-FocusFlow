@@ -113,7 +113,7 @@ export function MotivationWidget({
             className={`p-2 rounded-full ${color} bg-opacity-20 hover:bg-opacity-30 transition-all`}
             title="Refresh content"
           >
-            <RefreshCw className="w-4 h-4 text-current" />
+            <RefreshCw className="w-4 h-4 text-white" />
           </button>
           <div className={`p-2 rounded-full ${color} bg-opacity-20`}>
             <Icon className="w-5 h-5 text-white" />
