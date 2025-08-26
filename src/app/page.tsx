@@ -40,9 +40,9 @@ export default function Home() {
           <Link href="/auth/register" className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium">
             Start Studying Smarter
           </Link>
-          <button className="px-6 py-3 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md transition-colors font-medium">
+          <Link href="/demo" className="px-6 py-3 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md transition-colors font-medium">
             View Demo
-          </button>
+          </Link>
         </div>
       </section>
 
