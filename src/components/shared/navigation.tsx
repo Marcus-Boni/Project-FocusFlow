@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/stores/useUserStore";
 import { supabase } from "@/lib/supabase";
+import { AvatarUpload } from "@/components/shared/avatar-upload";
 import {
   Tooltip,
   TooltipContent,
@@ -18,7 +19,6 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  User,
   History,
   Target,
   Newspaper,
@@ -76,7 +76,6 @@ const navigationItems = [
 export function Navigation() {
   const pathname = usePathname();
   const { user, clearUser } = useUserStore();
-  const router = useRouter();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -89,10 +88,7 @@ export function Navigation() {
       <div className="p-6 border-b flex-shrink-0">
         <Tooltip>
           <TooltipTrigger asChild>
-            <div
-              className="flex items-center space-x-2 cursor-pointer"
-              onClick={() => router.push("/das")}
-            >
+            <div className="flex items-center space-x-2 cursor-help">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Brain className="w-5 h-5 text-primary-foreground" />
               </div>
@@ -134,9 +130,11 @@ export function Navigation() {
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center space-x-3 mb-3 cursor-help">
-              <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-                <User className="w-4 h-4" />
-              </div>
+              <AvatarUpload 
+                currentAvatarUrl={user?.user_metadata?.avatar_url}
+                size="sm"
+                variant="navigation"
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
                   {user?.user_metadata?.full_name || user?.email || "User"}

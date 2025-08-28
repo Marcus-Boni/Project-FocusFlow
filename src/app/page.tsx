@@ -124,10 +124,22 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t">
-        <div className="container mx-auto px-4 py-8 text-center text-muted-foreground">
+        <div className="container mx-auto px-4 py-4 text-center text-muted-foreground">
           <p>&copy; 2025 FocusFlow. Built for the developer community.</p>
         </div>
       </footer>
+    <div className="container mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
+      <span className="opacity-90">Built by </span>
+      <a
+        href="https://www.linkedin.com/in/marcus-boni-729a52243/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="ml-1 font-medium text-primary hover:underline"
+        aria-label="Marcus' profile (opens in a new tab)"
+      >
+        Marcus
+      </a>
+    </div>
     </div>
   );
 }

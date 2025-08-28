@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSessionStore } from '@/stores/useSessionStore'
 import { useUserStore } from '@/stores/useUserStore'
 import { supabase } from '@/lib/supabase'
+import { AvatarUpload } from '@/components/shared/avatar-upload'
 import { 
   Timer, 
   Volume2, 
@@ -366,7 +367,22 @@ export default function SettingsPage() {
             <h2 className="text-lg font-semibold">Profile</h2>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Avatar Upload Section */}
+            <div className="text-center py-4">
+              <h3 className="text-lg font-medium mb-6">Profile Picture</h3>
+              <AvatarUpload 
+                currentAvatarUrl={user?.user_metadata?.avatar_url}
+                variant="settings"
+                onAvatarUpdate={(url) => {
+                  setUserProfile(prev => ({ ...prev, avatar_url: url }))
+                }}
+              />
+              <p className="text-sm text-muted-foreground mt-4 max-w-md mx-auto">
+                Sua foto de perfil aparecerá em todo o aplicativo. Use uma imagem clara e profissional.
+              </p>
+            </div>
+
             <div>
               <label className="text-sm font-medium mb-2 block">Full Name</label>
               <input
