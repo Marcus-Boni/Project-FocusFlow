@@ -39,6 +39,9 @@ yarn-error.log*
 
 # vercel
 .vercel
+DEPLOY_GUIDE.md
+VALIDATION_CHECKLIST.md
+DEPLOY_READY.md
 
 # typescript
 *.tsbuildinfo

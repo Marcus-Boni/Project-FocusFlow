@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy": "npm run build && npm run lint",
+    "deploy:vercel": "vercel --prod",
+    "test:build": "npm run build && npm run start",
+    "analyze": "ANALYZE=true npm run build"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
