@@ -23,7 +23,7 @@ FocusFlow é um aplicativo moderno de rastreamento de estudos projetado especifi
 
 - **Framework**: Next.js 15 (App Router)
 - **Linguagem**: TypeScript (strict mode)
-- **Estilização**: TailwindCSS + Shadcn/UI
+- **Estilização**: TailwindCSS + Shadcn/UI + Radix/UI
 - **Backend**: Supabase (PostgreSQL + Auth)
 - **Estado Global**: Zustand
 - **Ícones**: Lucide React
